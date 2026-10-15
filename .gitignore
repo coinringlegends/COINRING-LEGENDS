@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Persistent WhatsApp Auth (Credentials & Keys)
+auth_info/
+*.auth_info*
+
+# Environment and Secrets
+.env
+local.properties
+/local.properties
+debug.keystore
+
+# Android & IDE
+*.iml
+.gradle
+.kotlin
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

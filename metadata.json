@@ -1,0 +1,6 @@
+{
+  "name": "Coinring Legends",
+  "description": "Handgefertigte Schweizer Münzringe & Unikate aus Zuswil / Kottwil, Luzern. Echt, exklusiv und meisterhaft verarbeitet.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

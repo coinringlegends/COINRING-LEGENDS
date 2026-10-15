@@ -1,0 +1,25 @@
+{
+  "name": "coinring-legends-callmebot-server",
+  "version": "1.0.0",
+  "description": "CallMeBot Admin Alert Backend for COINRING LEGENDS Swiss Shop",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "whatsapp",
+    "callmebot",
+    "railway",
+    "ecommerce",
+    "swiss",
+    "coinring"
+  ],
+  "author": "COINRING LEGENDS",
+  "license": "ISC"
+}
