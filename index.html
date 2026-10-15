@@ -4,11 +4,26 @@
 <meta charset="utf-8"/>
 <base href="/COINRING-LEGENDS/">
 
-<!-- 🔑 NUR CONFIG LADEN - KEINI KEYS IM HTML! 🔑 -->
-<script src="./config.js"></script>
+<!-- 🔑 CONFIG OPTIONAL LADEN - WENN FEHLT, LAUFT TROTZDEM! 🔑 -->
 <script>
-function getRailwayUrl(){return (window.APP_CONFIG&&window.APP_CONFIG.RAILWAY_URL)?window.APP_CONFIG.RAILWAY_URL:'https://coinring-legends-production.up.railway.app';}
-function getBase44Url(){return (window.APP_CONFIG&&window.APP_CONFIG.BASE44_DESIGN_URL)?window.APP_CONFIG.BASE44_DESIGN_URL:'https://coinring-legends.base44.app';}
+window.APP_CONFIG = window.APP_CONFIG || {
+  RAILWAY_URL: 'https://coinring-legends-production.up.railway.app',
+  BASE44_DESIGN_URL: 'https://coinring-legends.base44.app'
+};
+// Versuche config.js zu laden, aber blockiere nicht wenn fehlt
+(function(){
+  var s = document.createElement('script');
+  s.src = './config.js?v=' + Date.now();
+  s.async = false;
+  s.onerror = function(){ console.warn('config.js nicht gefunden - benutze Default URLs'); };
+  s.onload = function(){ console.log('✅ config.js geladen'); };
+  // Füge vor allen anderen Scripts ein
+  var first = document.getElementsByTagName('script')[0];
+  if(first && first.parentNode) first.parentNode.insertBefore(s, first);
+  else document.head.appendChild(s);
+})();
+function getRailwayUrl(){return (window.APP_CONFIG&&window.APP_CONFIG.RAILWAY_URL)||'https://coinring-legends-production.up.railway.app';}
+function getBase44Url(){return (window.APP_CONFIG&&window.APP_CONFIG.BASE44_DESIGN_URL)||'https://coinring-legends.base44.app';}
 </script>
 
 <script>
@@ -16,19 +31,11 @@ function getBase44Url(){return (window.APP_CONFIG&&window.APP_CONFIG.BASE44_DESI
 var proto = XMLHttpRequest.prototype;
 var open = proto.open;
 proto.open = function (method, url) {
-  // 🔑 RICHTIG TRENNEN!
   if (typeof url === 'string') {
-    // BACKEND -> RAILWAY (nur /api)
     if (url.startsWith('/api') &&!url.includes('railway.app') &&!url.includes('base44.app')) {
-      arguments[1] = getRailwayUrl() + url;
-      console.log('BACKEND -> RAILWAY:', url);
-    }
-    // DESIGN -> BASE44 ( /apps und /entities )
-    else if ((url.startsWith('/apps') || url.startsWith('/entities')) &&!url.includes('base44.app') &&!url.includes('railway.app')) {
-      if (!location.hostname.includes('base44.app')) {
-        arguments[1] = getBase44Url() + url;
-        console.log('DESIGN -> BASE44:', url);
-      }
+      try { arguments[1] = getRailwayUrl() + url; } catch(e){}
+    } else if ((url.startsWith('/apps') || url.startsWith('/entities')) &&!url.includes('base44.app') &&!url.includes('railway.app')) {
+      try { if(!location.hostname.includes('base44.app')) arguments[1] = getBase44Url() + url; } catch(e){}
     }
   }
   return open.apply(this, arguments);
@@ -36,15 +43,15 @@ proto.open = function (method, url) {
 if (typeof window.fetch === 'function') {
   var origFetch = window.fetch;
   window.fetch = function (resource, init) {
-    if (typeof resource === 'string') {
-      if (resource.startsWith('/api') &&!resource.includes('railway.app') &&!resource.includes('base44.app')) {
-        resource = getRailwayUrl() + resource;
-      } else if ((resource.startsWith('/apps') || resource.startsWith('/entities')) &&!resource.includes('base44.app') &&!resource.includes('railway.app')) {
-        if (!location.hostname.includes('base44.app')) {
-          resource = getBase44Url() + resource;
+    try {
+      if (typeof resource === 'string') {
+        if (resource.startsWith('/api') &&!resource.includes('railway.app') &&!resource.includes('base44.app')) {
+          resource = getRailwayUrl() + resource;
+        } else if ((resource.startsWith('/apps') || resource.startsWith('/entities')) &&!resource.includes('base44.app') &&!resource.includes('railway.app')) {
+          if(!location.hostname.includes('base44.app')) resource = getBase44Url() + resource;
         }
       }
-    }
+    } catch(e){}
     return origFetch.call(this, resource, init);
   };
 }
@@ -59,41 +66,14 @@ if (typeof window.fetch === 'function') {
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <title>COINRING LEGENDS™</title>
 <link crossorigin="" href="./assets/index.css" rel="stylesheet"/>
-<script>
-(function () {
-var titles = {"/login":"Login | COINRING LEGENDS™","/register":"Register | COINRING LEGENDS™","/":"COINRING LEGENDS™","/shop":"Shop | COINRING LEGENDS™","/archive":"Archive | COINRING LEGENDS™","/faq":"Faq | COINRING LEGENDS™","/privacy":"Privacy | COINRING LEGENDS™","/terms":"Terms | COINRING LEGENDS™","/studio":"Studio | COINRING LEGENDS™","/personalize":"Personalize | COINRING LEGENDS™","/about":"About | COINRING LEGENDS™","/contact":"Contact | COINRING LEGENDS™","/checkout":"Checkout | COINRING LEGENDS™","/admin":"Admin | COINRING LEGENDS™"};
-var dashed = function (s) { return s.replace(/([a-z0-9])([A-Z])/g, "$1-$2"); };
-var decode = function (s) { try { var d = decodeURIComponent(s); return d.indexOf("/") < 0? d : s; } catch (e) { return s; } };
-var segments = function (path) { return path.split("/").filter(Boolean).map(decode); };
-var norm = function (path) {
-var parts = segments(path).map(function (s) { return dashed(s).toLowerCase(); });
-return parts.length? "/" + parts.join("/") : "/";
-};
-var lastPath = location.pathname, written = document.title, on = true;
-var sync = function () {
-if (!on || location.pathname === lastPath) return;
-lastPath = location.pathname;
-if (document.title!== written) { on = false; return; }
-var title = titles[norm(location.pathname)];
-if (title === undefined) return;
-document.title = title;
-written = document.title;
-};
-var wrap = function (fn) {
-return function () {
-var r = fn.apply(this, arguments);
-try { sync(); } catch (e) {}
-return r;
-};
-};
-history.pushState = wrap(history.pushState);
-history.replaceState = wrap(history.replaceState);
-window.addEventListener("popstate", sync);
-})();
-</script>
 </head>
 <body class="bg-[#0A0A0A] text-white">
-<div id="root"></div>
+<div id="root">
+<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0A0A0A;color:#D4B78F;font-family:'Cormorant Garamond',serif;text-align:center;">
+<h1 style="font-size:2rem;letter-spacing:0.2em;text-transform:uppercase;">COINRING LEGENDS™</h1>
+<p style="font-size:0.875rem;letter-spacing:0.15em;opacity:0.7;margin-top:1rem;">LÄDT...</p>
+</div>
+</div>
 <script type="module" src="./assets/index.js"></script>
 </body>
 </html>
