@@ -4,19 +4,29 @@
 <meta charset="utf-8"/>
 <base href="/COINRING-LEGENDS/">
 
-<!-- 🔑 CONFIG DATEI LADEN - HIER KOMMEN ALLE API KEYS HER 🔑 -->
+<!-- 🔑 NUR CONFIG LADEN - KEINI KEYS IM HTML! 🔑 -->
 <script src="./config.js"></script>
 
 <script>
-// 🔑 KEYS AUS config.js HOLEN
-const APP_CFG = window.APP_CONFIG || {};
-const BASE44_API_KEY = APP_CFG.BASE44_API_KEY || 'HIER_BASE44_APP_API_KEY_EINFÜGEN';
-const GEMINI_API_KEY = APP_CFG.GEMINI_API_KEY || 'HIER_GEMINI_API_KEY_VOM_2_ACCOUNT_EINFÜGEN';
-const RAILWAY_URL = APP_CFG.RAILWAY_URL || 'https://coinring-legends-production.up.railway.app';
-const BASE44_DESIGN_URL = APP_CFG.BASE44_DESIGN_URL || 'https://coinring-legends.base44.app';
+// 🔑 Keys kommen NUR aus config.js - kein Fallback mit Keys im HTML!
+function getRailwayUrl() {
+  return (window.APP_CONFIG && window.APP_CONFIG.RAILWAY_URL) ? window.APP_CONFIG.RAILWAY_URL : 'https://coinring-legends-production.up.railway.app';
+}
+function getBase44Key() {
+  return (window.APP_CONFIG && window.APP_CONFIG.BASE44_API_KEY) ? window.APP_CONFIG.BASE44_API_KEY : null;
+}
+function getGeminiKey() {
+  return (window.APP_CONFIG && window.APP_CONFIG.GEMINI_API_KEY) ? window.APP_CONFIG.GEMINI_API_KEY : null;
+}
+
+if (!window.APP_CONFIG) {
+  console.error('❌ config.js nicht geladen! Bitte ./config.js erstellen!');
+} else {
+  console.log('✅ config.js geladen - DESIGN=BASE44, BACKEND=RAILWAY');
+}
 </script>
 
-<!-- 🔑 DESIGN=BASE44, BACKEND=RAILWAY -->
+<!-- 🔑 BACKEND = RAILWAY - KEINI KEYS HIER! 🔑 -->
 <script>
 (function () {
 var proto = XMLHttpRequest.prototype;
@@ -32,7 +42,9 @@ proto.open = function (method, url) {
   this.__b44IsAuthCheck = /\/entities\/User\/me(\?|$)/.test(url);
   if (typeof url === 'string' && (url.startsWith('/api') || url.startsWith('/apps') || url.startsWith('/entities'))) {
     if (!url.includes('base44.app') && !url.includes('railway.app') && !location.hostname.includes('base44.app')) {
-      arguments[1] = RAILWAY_URL + url;
+      var railway = getRailwayUrl();
+      console.log('🔑 BACKEND -> RAILWAY:', url, '->', railway + url);
+      arguments[1] = railway + url;
     }
   }
   return open.apply(this, arguments);
@@ -53,7 +65,7 @@ if (typeof window.fetch === 'function') {
   var origFetch = window.fetch;
   window.fetch = function (resource, init) {
     if (typeof resource === 'string' && (resource.startsWith('/api') || resource.startsWith('/apps') || resource.startsWith('/entities')) && !resource.includes('base44.app') && !resource.includes('railway.app')) {
-      resource = RAILWAY_URL + resource;
+      resource = getRailwayUrl() + resource;
     }
     return origFetch.call(this, resource, init);
   };
@@ -63,7 +75,7 @@ if (typeof window.fetch === 'function') {
 
 <link href="https://media.base44.com/images/public/6a8c6271ecc5935877d8b172/702ca17da_logo.png/v1/fit/w_180,h_180/702ca17da_logo.png" rel="icon" type="image/png"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-<meta content="COINRING LEGENDS™ - Design via Base44, Backend via Railway LIVE" name="description"/>
+<meta content="COINRING LEGENDS™" name="description"/>
 <meta content="#0A0A0A" name="theme-color"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -108,7 +120,7 @@ window.addEventListener("popstate", sync);
 <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0A0A0A;color:#D4B78F;font-family:'Cormorant Garamond',serif;">
 <div style="text-align:center;">
 <h1 style="font-size:2rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:1rem;">COINRING LEGENDS™</h1>
-<p style="font-size:0.875rem;letter-spacing:0.15em;opacity:0.7;">LÄDT ATELIER... DESIGN=BASE44 🔑 BACKEND=RAILWAY 🔑</p>
+<p style="font-size:0.875rem;letter-spacing:0.15em;opacity:0.7;">LÄDT ATELIER...</p>
 </div>
 </div>
 </div>
