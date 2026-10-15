@@ -4,24 +4,19 @@
 <meta charset="utf-8"/>
 <base href="/COINRING-LEGENDS/">
 
-<!-- ============================================================================ -->
-<!-- 🔑 DESIGN = BASE44 API KEY, BACKEND = RAILWAY - BEIDES MARKIERT 🔑 -->
-<!-- ============================================================================ -->
+<!-- 🔑 CONFIG DATEI LADEN - HIER KOMMEN ALLE API KEYS HER 🔑 -->
+<script src="./config.js"></script>
+
 <script>
-// 🔑 DESIGN KEY - HIER BASE44 APP API KEY FÜR DESIGN 🔑
-const BASE44_API_KEY = 'b44u_8c15b59a5561ba4399a7164a0a8393addcfe63a376ad36c44b2acbed51905975'; // <-- 🔑 DESIGN KEY HIER!
-// Woher? base44 Dashboard -> App -> Settings -> API Keys -> Create
-
-// 🔑 AI KEY - HIER GEMINI API KEY VOM 2. ACCOUNT 🔑
-const GEMINI_API_KEY = 'AQ.Ab8RN6ITe81QJqnYgOWE0hZFTj_gg5Pg8VYaybXP3xtGhYOGmg'; // <-- 🔑 GEMINI KEY HIER!
-// Woher? aistudio.google.com/app/apikey mit 2. Google Account
-
-// 🔑 BACKEND URL - MUSS RAILWAY SEIN (NICHT BASE44!) 🔑
-const RAILWAY_URL = 'https://coinring-legends-production.up.railway.app/';
-const BASE44_DESIGN_URL = 'https://coinring-legends.base44.app';
+// 🔑 KEYS AUS config.js HOLEN
+const APP_CFG = window.APP_CONFIG || {};
+const BASE44_API_KEY = APP_CFG.BASE44_API_KEY || 'HIER_BASE44_APP_API_KEY_EINFÜGEN';
+const GEMINI_API_KEY = APP_CFG.GEMINI_API_KEY || 'HIER_GEMINI_API_KEY_VOM_2_ACCOUNT_EINFÜGEN';
+const RAILWAY_URL = APP_CFG.RAILWAY_URL || 'https://coinring-legends-production.up.railway.app';
+const BASE44_DESIGN_URL = APP_CFG.BASE44_DESIGN_URL || 'https://coinring-legends.base44.app';
 </script>
 
-<!-- 🔑 WICHTIG: DESIGN KOMMT VON BASE44, BACKEND GEHT AN RAILWAY! 🔑 -->
+<!-- 🔑 DESIGN=BASE44, BACKEND=RAILWAY -->
 <script>
 (function () {
 var proto = XMLHttpRequest.prototype;
@@ -35,22 +30,14 @@ var forgetStoredToken = function () {
 };
 proto.open = function (method, url) {
   this.__b44IsAuthCheck = /\/entities\/User\/me(\?|$)/.test(url);
-  // 🔑 BACKEND = RAILWAY - ALLE API CALLS AN RAILWAY! 🔑
   if (typeof url === 'string' && (url.startsWith('/api') || url.startsWith('/apps') || url.startsWith('/entities'))) {
-    // Nur wenn nicht schon base44.app Design URL
     if (!url.includes('base44.app') && !url.includes('railway.app') && !location.hostname.includes('base44.app')) {
-      var newUrl = RAILWAY_URL + url;
-      console.log('🔑 BACKEND -> RAILWAY:', url, '->', newUrl);
-      url = newUrl;
+      arguments[1] = RAILWAY_URL + url;
     }
   }
   return open.apply(this, arguments);
 };
 proto.setRequestHeader = function (name, value) {
-  // 🔑 DESIGN KEY WIRD HIER FÜR BASE44 DESIGN BENUTZT 🔑
-  if (name.toLowerCase() === 'authorization' && BASE44_API_KEY && !BASE44_API_KEY.includes('HIER_')) {
-    // Base44 Design Auth mit API Key
-  }
   if (this.__b44IsAuthCheck && name.toLowerCase() === 'authorization' && value === storedTokenHeader()) {
     this.__b44SentToken = value;
   }
@@ -58,26 +45,19 @@ proto.setRequestHeader = function (name, value) {
 };
 proto.send = function () {
   this.addEventListener('loadend', function () {
-    var rejectedTokenStillStored = this.status === 401 && this.__b44SentToken === storedTokenHeader();
-    if (rejectedTokenStillStored) forgetStoredToken();
+    if (this.status === 401 && this.__b44SentToken === storedTokenHeader()) forgetStoredToken();
   });
   return send.apply(this, arguments);
 };
 if (typeof window.fetch === 'function') {
   var origFetch = window.fetch;
   window.fetch = function (resource, init) {
-    try {
-      // 🔑 BACKEND = RAILWAY 🔑
-      if (typeof resource === 'string' && (resource.startsWith('/api') || resource.startsWith('/apps') || resource.startsWith('/entities')) && !resource.includes('base44.app') && !resource.includes('railway.app')) {
-        var newRes = RAILWAY_URL + resource;
-        console.log('🔑 BACKEND FETCH -> RAILWAY:', resource, '->', newRes);
-        resource = newRes;
-      }
-    } catch(e) {}
+    if (typeof resource === 'string' && (resource.startsWith('/api') || resource.startsWith('/apps') || resource.startsWith('/entities')) && !resource.includes('base44.app') && !resource.includes('railway.app')) {
+      resource = RAILWAY_URL + resource;
+    }
     return origFetch.call(this, resource, init);
   };
 }
-console.log('✅ CONFIG: DESIGN=BASE44 mit Key', BASE44_API_KEY.substring(0,12)+'...', '| BACKEND=RAILWAY', RAILWAY_URL, '| GEMINI', GEMINI_API_KEY.substring(0,10)+'...');
 })();
 </script>
 
@@ -92,22 +72,7 @@ console.log('✅ CONFIG: DESIGN=BASE44 mit Key', BASE44_API_KEY.substring(0,12)+
 <link crossorigin="" href="./assets/index.css" rel="stylesheet"/>
 <script>
 (function () {
-var titles = {
-"/login": "Login | COINRING LEGENDS™",
-"/register": "Register | COINRING LEGENDS™",
-"/": "COINRING LEGENDS™",
-"/shop": "Shop | COINRING LEGENDS™",
-"/archive": "Archive | COINRING LEGENDS™",
-"/faq": "Faq | COINRING LEGENDS™",
-"/privacy": "Privacy | COINRING LEGENDS™",
-"/terms": "Terms | COINRING LEGENDS™",
-"/studio": "Studio | COINRING LEGENDS™",
-"/personalize": "Personalize | COINRING LEGENDS™",
-"/about": "About | COINRING LEGENDS™",
-"/contact": "Contact | COINRING LEGENDS™",
-"/checkout": "Checkout | COINRING LEGENDS™",
-"/admin": "Admin | COINRING LEGENDS™"
-};
+var titles = {"/login":"Login | COINRING LEGENDS™","/register":"Register | COINRING LEGENDS™","/":"COINRING LEGENDS™","/shop":"Shop | COINRING LEGENDS™","/archive":"Archive | COINRING LEGENDS™","/faq":"Faq | COINRING LEGENDS™","/privacy":"Privacy | COINRING LEGENDS™","/terms":"Terms | COINRING LEGENDS™","/studio":"Studio | COINRING LEGENDS™","/personalize":"Personalize | COINRING LEGENDS™","/about":"About | COINRING LEGENDS™","/contact":"Contact | COINRING LEGENDS™","/checkout":"Checkout | COINRING LEGENDS™","/admin":"Admin | COINRING LEGENDS™"};
 var dashed = function (s) { return s.replace(/([a-z0-9])([A-Z])/g, "$1-$2"); };
 var decode = function (s) { try { var d = decodeURIComponent(s); return d.indexOf("/") < 0 ? d : s; } catch (e) { return s; } };
 var segments = function (path) { return path.split("/").filter(Boolean).map(decode); };
