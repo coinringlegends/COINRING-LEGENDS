@@ -6,66 +6,44 @@
 
 <!-- 🔑 NUR CONFIG LADEN - KEINI KEYS IM HTML! 🔑 -->
 <script src="./config.js"></script>
-
 <script>
-// 🔑 Keys kommen NUR aus config.js - kein Fallback mit Keys im HTML!
-function getRailwayUrl() {
-  return (window.APP_CONFIG && window.APP_CONFIG.RAILWAY_URL) ? window.APP_CONFIG.RAILWAY_URL : 'https://coinring-legends-production.up.railway.app';
-}
-function getBase44Key() {
-  return (window.APP_CONFIG && window.APP_CONFIG.BASE44_API_KEY) ? window.APP_CONFIG.BASE44_API_KEY : null;
-}
-function getGeminiKey() {
-  return (window.APP_CONFIG && window.APP_CONFIG.GEMINI_API_KEY) ? window.APP_CONFIG.GEMINI_API_KEY : null;
-}
-
-if (!window.APP_CONFIG) {
-  console.error('❌ config.js nicht geladen! Bitte ./config.js erstellen!');
-} else {
-  console.log('✅ config.js geladen - DESIGN=BASE44, BACKEND=RAILWAY');
-}
+function getRailwayUrl(){return (window.APP_CONFIG&&window.APP_CONFIG.RAILWAY_URL)?window.APP_CONFIG.RAILWAY_URL:'https://coinring-legends-production.up.railway.app';}
+function getBase44Url(){return (window.APP_CONFIG&&window.APP_CONFIG.BASE44_DESIGN_URL)?window.APP_CONFIG.BASE44_DESIGN_URL:'https://coinring-legends.base44.app';}
 </script>
 
-<!-- 🔑 BACKEND = RAILWAY - KEINI KEYS HIER! 🔑 -->
 <script>
 (function () {
 var proto = XMLHttpRequest.prototype;
-var open = proto.open, setRequestHeader = proto.setRequestHeader, send = proto.send;
-var TOKEN_KEY = 'base44_access_token';
-var storedTokenHeader = function () {
-  try { return 'Bearer ' + localStorage.getItem(TOKEN_KEY); } catch (e) { return null; }
-};
-var forgetStoredToken = function () {
-  try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem('token'); } catch (e) {}
-};
+var open = proto.open;
 proto.open = function (method, url) {
-  this.__b44IsAuthCheck = /\/entities\/User\/me(\?|$)/.test(url);
-  if (typeof url === 'string' && (url.startsWith('/api') || url.startsWith('/apps') || url.startsWith('/entities'))) {
-    if (!url.includes('base44.app') && !url.includes('railway.app') && !location.hostname.includes('base44.app')) {
-      var railway = getRailwayUrl();
-      console.log('🔑 BACKEND -> RAILWAY:', url, '->', railway + url);
-      arguments[1] = railway + url;
+  // 🔑 RICHTIG TRENNEN!
+  if (typeof url === 'string') {
+    // BACKEND -> RAILWAY (nur /api)
+    if (url.startsWith('/api') &&!url.includes('railway.app') &&!url.includes('base44.app')) {
+      arguments[1] = getRailwayUrl() + url;
+      console.log('BACKEND -> RAILWAY:', url);
+    }
+    // DESIGN -> BASE44 ( /apps und /entities )
+    else if ((url.startsWith('/apps') || url.startsWith('/entities')) &&!url.includes('base44.app') &&!url.includes('railway.app')) {
+      if (!location.hostname.includes('base44.app')) {
+        arguments[1] = getBase44Url() + url;
+        console.log('DESIGN -> BASE44:', url);
+      }
     }
   }
   return open.apply(this, arguments);
 };
-proto.setRequestHeader = function (name, value) {
-  if (this.__b44IsAuthCheck && name.toLowerCase() === 'authorization' && value === storedTokenHeader()) {
-    this.__b44SentToken = value;
-  }
-  return setRequestHeader.call(this, name, value);
-};
-proto.send = function () {
-  this.addEventListener('loadend', function () {
-    if (this.status === 401 && this.__b44SentToken === storedTokenHeader()) forgetStoredToken();
-  });
-  return send.apply(this, arguments);
-};
 if (typeof window.fetch === 'function') {
   var origFetch = window.fetch;
   window.fetch = function (resource, init) {
-    if (typeof resource === 'string' && (resource.startsWith('/api') || resource.startsWith('/apps') || resource.startsWith('/entities')) && !resource.includes('base44.app') && !resource.includes('railway.app')) {
-      resource = getRailwayUrl() + resource;
+    if (typeof resource === 'string') {
+      if (resource.startsWith('/api') &&!resource.includes('railway.app') &&!resource.includes('base44.app')) {
+        resource = getRailwayUrl() + resource;
+      } else if ((resource.startsWith('/apps') || resource.startsWith('/entities')) &&!resource.includes('base44.app') &&!resource.includes('railway.app')) {
+        if (!location.hostname.includes('base44.app')) {
+          resource = getBase44Url() + resource;
+        }
+      }
     }
     return origFetch.call(this, resource, init);
   };
@@ -75,7 +53,6 @@ if (typeof window.fetch === 'function') {
 
 <link href="https://media.base44.com/images/public/6a8c6271ecc5935877d8b172/702ca17da_logo.png/v1/fit/w_180,h_180/702ca17da_logo.png" rel="icon" type="image/png"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-<meta content="COINRING LEGENDS™" name="description"/>
 <meta content="#0A0A0A" name="theme-color"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -86,17 +63,17 @@ if (typeof window.fetch === 'function') {
 (function () {
 var titles = {"/login":"Login | COINRING LEGENDS™","/register":"Register | COINRING LEGENDS™","/":"COINRING LEGENDS™","/shop":"Shop | COINRING LEGENDS™","/archive":"Archive | COINRING LEGENDS™","/faq":"Faq | COINRING LEGENDS™","/privacy":"Privacy | COINRING LEGENDS™","/terms":"Terms | COINRING LEGENDS™","/studio":"Studio | COINRING LEGENDS™","/personalize":"Personalize | COINRING LEGENDS™","/about":"About | COINRING LEGENDS™","/contact":"Contact | COINRING LEGENDS™","/checkout":"Checkout | COINRING LEGENDS™","/admin":"Admin | COINRING LEGENDS™"};
 var dashed = function (s) { return s.replace(/([a-z0-9])([A-Z])/g, "$1-$2"); };
-var decode = function (s) { try { var d = decodeURIComponent(s); return d.indexOf("/") < 0 ? d : s; } catch (e) { return s; } };
+var decode = function (s) { try { var d = decodeURIComponent(s); return d.indexOf("/") < 0? d : s; } catch (e) { return s; } };
 var segments = function (path) { return path.split("/").filter(Boolean).map(decode); };
 var norm = function (path) {
 var parts = segments(path).map(function (s) { return dashed(s).toLowerCase(); });
-return parts.length ? "/" + parts.join("/") : "/";
+return parts.length? "/" + parts.join("/") : "/";
 };
 var lastPath = location.pathname, written = document.title, on = true;
 var sync = function () {
 if (!on || location.pathname === lastPath) return;
 lastPath = location.pathname;
-if (document.title !== written) { on = false; return; }
+if (document.title!== written) { on = false; return; }
 var title = titles[norm(location.pathname)];
 if (title === undefined) return;
 document.title = title;
@@ -116,14 +93,7 @@ window.addEventListener("popstate", sync);
 </script>
 </head>
 <body class="bg-[#0A0A0A] text-white">
-<div id="root">
-<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0A0A0A;color:#D4B78F;font-family:'Cormorant Garamond',serif;">
-<div style="text-align:center;">
-<h1 style="font-size:2rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:1rem;">COINRING LEGENDS™</h1>
-<p style="font-size:0.875rem;letter-spacing:0.15em;opacity:0.7;">LÄDT ATELIER...</p>
-</div>
-</div>
-</div>
+<div id="root"></div>
 <script type="module" src="./assets/index.js"></script>
 </body>
 </html>
