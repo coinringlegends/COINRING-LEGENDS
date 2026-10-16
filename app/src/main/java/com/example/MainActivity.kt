@@ -46,8 +46,26 @@ class MainActivity : ComponentActivity() {
 
   @SuppressLint("SetJavaScriptEnabled")
   override fun onCreate(savedInstanceState: Bundle?) {
+    WebView.enableSlowWholeDocumentDraw()
     super.onCreate(savedInstanceState)
-    enableEdgeToEdge()
+    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED)
+
+    // Pre-create WebView cache directories so Chromium index creation never fails
+    try {
+      val defaultCache = java.io.File(cacheDir, "WebView/Default")
+      defaultCache.mkdirs()
+      val httpCache = java.io.File(defaultCache, "HTTP Cache")
+      httpCache.mkdirs()
+      java.io.File(httpCache, "index-dir").mkdirs()
+      val codeCache = java.io.File(httpCache, "Code Cache")
+      codeCache.mkdirs()
+      java.io.File(codeCache, "wasm").mkdirs()
+      java.io.File(codeCache, "js").mkdirs()
+    } catch (e: Exception) {
+      // ignore
+    }
+
+    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED)
 
     // Create native WebView directly as root view to avoid Compose ViewLayer reflection & Mesa rendernode probing
     val wv = WebView(this).apply {
@@ -57,11 +75,13 @@ class MainActivity : ComponentActivity() {
       )
       setBackgroundColor(android.graphics.Color.parseColor("#0A0A0A"))
       setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+      clearCache(true)
 
       settings.apply {
         javaScriptEnabled = true
         domStorageEnabled = true
         databaseEnabled = true
+        cacheMode = WebSettings.LOAD_NO_CACHE
         allowFileAccess = true
         allowContentAccess = true
         allowFileAccessFromFileURLs = true
@@ -122,6 +142,14 @@ class MainActivity : ComponentActivity() {
               ByteArrayInputStream(ByteArray(0))
             )
           }
+          if (url.contains("config.js")) {
+            try {
+              val inputStream = assets.open("config.js")
+              return WebResourceResponse("application/javascript", "UTF-8", inputStream)
+            } catch (e: Exception) {
+              // fallback
+            }
+          }
           return super.shouldInterceptRequest(view, request)
         }
       }
@@ -164,6 +192,8 @@ class MainActivity : ComponentActivity() {
 
     webView = wv
     setContentView(wv)
+    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED)
+    window.decorView.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
 
     onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
       override fun handleOnBackPressed() {
